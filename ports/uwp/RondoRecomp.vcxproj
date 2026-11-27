@@ -95,7 +95,7 @@
     <ClInclude Include="*.h" />
     <None Include="Frame.hlsl" />
     <AppxManifest Include="Package.appxmanifest" />
-    <Content Include="Assets\*.png"><DeploymentContent>true</DeploymentContent></Content>
+    <Image Include="Assets\*.png"><DeploymentContent>true</DeploymentContent></Image>
     <Content Include="$(IntDir)Shaders\FrameVS.cso">
       <Link>Shaders\FrameVS.cso</Link><TargetPath>Shaders\FrameVS.cso</TargetPath><DeploymentContent>true</DeploymentContent>
     </Content>
