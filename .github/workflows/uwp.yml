@@ -55,7 +55,7 @@ jobs:
         run: |
           $package = ./ports/uwp/scripts/Build-Uwp.ps1 -Configuration Release -Jobs 2
           "package=$($package.PackagePath)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-      - name: Sign development MSIX and verify signature
+      - name: Sign development MSIX and validate signer and package digest
         shell: pwsh
         env:
           RONDO_MSIX_PATH: ${{ steps.build.outputs.package }}
@@ -63,8 +63,8 @@ jobs:
           Start-Transcript -Path 'build/uwp/logs/sign-uwp.log' -Force | Out-Null
           try {
             # The private key is non-exportable and disappears with this disposable runner.
-            # Only the public CER is uploaded. Temporary verification trust is removed in finally.
-            ./ports/uwp/scripts/Sign-Uwp.ps1 -PackagePath $env:RONDO_MSIX_PATH -VerifyWithTemporaryTrust
+            # The self-signed chain is intentionally not installed as a trusted root.
+            ./ports/uwp/scripts/Sign-Uwp.ps1 -PackagePath $env:RONDO_MSIX_PATH -AllowSelfSignedDevelopmentCert
           } finally { Stop-Transcript | Out-Null }
       - name: Upload signed development MSIX, public certificate and dependencies
         uses: actions/upload-artifact@v4

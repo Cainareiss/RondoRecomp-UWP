@@ -154,8 +154,9 @@ chave privada no armazenamento de certificados e exporta somente o `.cer`
 público ao lado do `.msix`. Para reutilizar o certificado, informe
 `-CertificateThumbprint`. Não há certificado, chave, senha ou credencial no
 repositório. O uso local padrão não instala o pacote nem altera a confiança de
-certificados. O workflow usa `-VerifyWithTemporaryTrust` somente no runner
-descartável e remove essa confiança temporária ao concluir a verificação.
+certificados. No runner descartável, o workflow confere o digest/identidade da
+assinatura sem instalar o certificado autoassinado como raiz confiável. O Xbox
+precisa confiar no `.cer` público para permitir a instalação do pacote de teste.
 
 ## Fornecer o disco e usar o controle
 

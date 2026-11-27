@@ -2,7 +2,7 @@
 param(
     [Parameter(Mandatory = $true)][string]$PackagePath,
     [string]$CertificateThumbprint,
-    [switch]$VerifyWithTemporaryTrust
+    [switch]$AllowSelfSignedDevelopmentCert
 )
 
 $ErrorActionPreference = 'Stop'
@@ -33,27 +33,22 @@ if (!(Test-Path -LiteralPath $signTool)) { throw 'Instale Windows SDK 10.0.22621
 if ($LASTEXITCODE -ne 0) { throw 'SignTool nao conseguiu assinar o pacote.' }
 $publicCertificate = [IO.Path]::ChangeExtension($PackagePath, '.cer')
 Export-Certificate -Cert $certificate -FilePath $publicCertificate -Force | Out-Null
-$temporaryTrustPath = "Cert:\CurrentUser\TrustedPeople\$($certificate.Thumbprint)"
-$addedTemporaryTrust = $false
-try {
-    # Opt in only on a disposable CI runner. Local use never changes trust by default.
-    if ($VerifyWithTemporaryTrust -and !(Test-Path -LiteralPath $temporaryTrustPath)) {
-        Import-Certificate -FilePath $publicCertificate -CertStoreLocation 'Cert:\CurrentUser\TrustedPeople' | Out-Null
-        $addedTemporaryTrust = $true
-    }
-    $signature = Get-AuthenticodeSignature -LiteralPath $PackagePath
-    if (!$signature.SignerCertificate -or $signature.SignerCertificate.Thumbprint -ne $certificate.Thumbprint -or
-        $signature.Status -in @('HashMismatch', 'NotSigned', 'NotSupportedFileFormat', 'Incompatible')) {
-        throw "A verificacao da assinatura falhou: $($signature.Status)."
-    }
-    if ($VerifyWithTemporaryTrust -or $signature.Status -eq 'Valid') {
-        & $signTool verify /pa /all /v $PackagePath | Out-Host
-        if ($LASTEXITCODE -ne 0) { throw 'SignTool rejeitou a assinatura ou a cadeia do certificado.' }
-    } else {
-        Write-Host "Assinatura criada com o certificado esperado; confianca local nao estabelecida ($($signature.Status))."
-    }
-} finally {
-    if ($addedTemporaryTrust) { Remove-Item -LiteralPath $temporaryTrustPath -Force }
+$signature = Get-AuthenticodeSignature -LiteralPath $PackagePath
+Write-Host "Status da assinatura: $($signature.Status) — $($signature.StatusMessage)"
+if (!$signature.SignerCertificate -or $signature.SignerCertificate.Thumbprint -ne $certificate.Thumbprint -or
+    $signature.Status -in @('HashMismatch', 'NotSigned', 'NotSupportedFileFormat', 'Incompatible')) {
+    throw "A verificacao da assinatura falhou: $($signature.Status)."
+}
+if ($signature.Status -eq 'Valid') {
+    & $signTool verify /pa /all /v $PackagePath | Out-Host
+    if ($LASTEXITCODE -ne 0) { throw 'SignTool rejeitou a assinatura ou a cadeia do certificado.' }
+} elseif ($AllowSelfSignedDevelopmentCert -and $signature.Status -eq 'NotTrusted' -and
+          $signature.SignerCertificate.Subject -eq $signature.SignerCertificate.Issuer) {
+    # A package digest and signer match; only the expected self-signed chain is untrusted.
+    # The target device must trust the exported public certificate before deployment.
+    Write-Host 'Assinatura e identidade reconhecidas; cadeia autoassinada nao confiavel por padrao.'
+} else {
+    throw "A verificacao da assinatura falhou: $($signature.Status)."
 }
 $metadataPath = Join-Path (Split-Path -Parent $PackagePath) 'package-info.json'
 if (Test-Path -LiteralPath $metadataPath) {
