@@ -76,8 +76,9 @@ if ($GeneratedDir) {
 if ($LASTEXITCODE -ne 0) { throw 'Falha no build ou empacotamento UWP. Consulte o erro MSBuild acima.' }
 [xml]$sourceManifest = Get-Content -LiteralPath (Join-Path $repository 'ports/uwp/Package.appxmanifest') -Raw
 $versionPattern = '_' + [regex]::Escape($sourceManifest.Package.Identity.Version) + '_x64(?:_|\.)'
-$packages = @(Get-ChildItem -LiteralPath $appxDirectory -Recurse -File -Filter '*.appx' |
+$packages = @(Get-ChildItem -LiteralPath $appxDirectory -Recurse -File |
     Where-Object { $_.FullName -notmatch '[\\/]Dependencies[\\/]' -and
+        $_.Extension.ToLowerInvariant() -in @('.appx', '.msix') -and
         $_.Name -match $versionPattern })
 if ($packages.Count -ne 1) {
     throw "Esperado exatamente um APPX principal deste build em $appxDirectory; encontrados: $($packages.Count)."

@@ -10,8 +10,8 @@ Set-StrictMode -Version Latest
 if ($env:OS -ne 'Windows_NT') { throw 'Execute o empacotamento com o Windows SDK no Windows.' }
 $repository = (Resolve-Path (Join-Path $PSScriptRoot '../../..')).Path
 $AppxPath = (Resolve-Path -LiteralPath $AppxPath).Path
-if ([IO.Path]::GetExtension($AppxPath).ToLowerInvariant() -ne '.appx') {
-    throw 'AppxPath deve ser o APPX principal produzido por MSBuild.'
+if ([IO.Path]::GetExtension($AppxPath).ToLowerInvariant() -notin @('.appx', '.msix')) {
+    throw 'AppxPath deve ser o APPX/MSIX principal produzido por MSBuild.'
 }
 if (!$OutputDir) { $OutputDir = Join-Path $repository 'build/uwp/MSIX' }
 $OutputDir = [IO.Path]::GetFullPath($OutputDir)
