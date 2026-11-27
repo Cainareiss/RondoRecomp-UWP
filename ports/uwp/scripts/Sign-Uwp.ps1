@@ -42,7 +42,9 @@ if (!$signature.SignerCertificate -or $signature.SignerCertificate.Thumbprint -n
 if ($signature.Status -eq 'Valid') {
     & $signTool verify /pa /all /v $PackagePath | Out-Host
     if ($LASTEXITCODE -ne 0) { throw 'SignTool rejeitou a assinatura ou a cadeia do certificado.' }
-} elseif ($AllowSelfSignedDevelopmentCert -and $signature.Status -eq 'NotTrusted' -and
+} elseif ($AllowSelfSignedDevelopmentCert -and
+          $signature.Status -in @('NotTrusted', 'UnknownError') -and
+          $signature.StatusMessage -match 'root certificate.*not trusted' -and
           $signature.SignerCertificate.Subject -eq $signature.SignerCertificate.Issuer) {
     # A package digest and signer match; only the expected self-signed chain is untrusted.
     # The target device must trust the exported public certificate before deployment.
