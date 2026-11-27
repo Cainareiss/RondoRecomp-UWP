@@ -1,6 +1,6 @@
 name: UWP x64 MSIX (interpreter bootstrap, no game data)
 
-on:
+"on":
   workflow_dispatch:
   push:
     branches:
