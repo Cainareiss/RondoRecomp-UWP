@@ -196,7 +196,7 @@ bool pce_state_save(const Pce *p, const char *path, uint64_t disc_id, char *err,
         h.state_size = (uint32_t)n;
         h.disc_id = disc_id;
         h.code_len = delta_encode(snap, zero, n, code);
-        FILE *f = fopen(path, "wb");
+        FILE *f = disc_fopen(path, "wb");
         if (f) {
             ok = fwrite(&h, sizeof h, 1, f) == 1 && fwrite(code, 1, h.code_len, f) == h.code_len;
             ok = (fclose(f) == 0) && ok;
@@ -213,7 +213,7 @@ bool pce_state_save(const Pce *p, const char *path, uint64_t disc_id, char *err,
 
 bool pce_state_load(Pce *p, const char *path, uint64_t disc_id, char *err, int err_len)
 {
-    FILE *f = fopen(path, "rb");
+    FILE *f = disc_fopen(path, "rb");
     if (!f) { snprintf(err, (size_t)err_len, "no saved state in this slot"); return false; }
     StateHeader h;
     bool ok = fread(&h, sizeof h, 1, f) == 1 && !memcmp(h.magic, STATE_MAGIC, sizeof STATE_MAGIC);
@@ -225,7 +225,14 @@ bool pce_state_load(Pce *p, const char *path, uint64_t disc_id, char *err, int e
     }
     if (h.disc_id != disc_id) { fclose(f); snprintf(err, (size_t)err_len, "saved from a different disc"); return false; }
     size_t n = sizeof(Pce);
-    uint8_t *snap = calloc(1, n), *code = malloc(h.code_len ? h.code_len : 1);
+    /* A valid snapshot cannot exceed the encoder's bound. Validate before any
+     * allocation so a damaged slot cannot exhaust the Xbox app's memory budget. */
+    if (!h.code_len || h.code_len > delta_bound(n)) {
+        fclose(f);
+        snprintf(err, (size_t)err_len, "saved state payload size is out of range");
+        return false;
+    }
+    uint8_t *snap = calloc(1, n), *code = malloc((size_t)h.code_len);
     ok = snap && code && fread(code, 1, h.code_len, f) == h.code_len;
     fclose(f);
     if (ok) {

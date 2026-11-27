@@ -1,0 +1,83 @@
+name: UWP x64 MSIX (interpreter bootstrap, no game data)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'uwp/**'
+      - 'msix/**'
+    paths:
+      - 'ports/uwp/**'
+      - 'runtime/**'
+      - 'third_party/lzma/**'
+      - '.github/workflows/uwp.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: windows-2022
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ensure VS 2022 UWP C++ v143 and SDK 22621
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $logs = Join-Path $env:GITHUB_WORKSPACE 'build/uwp/logs'
+          New-Item -ItemType Directory -Path $logs -Force | Out-Null
+          Start-Transcript -Path (Join-Path $logs 'toolchain.log') -Force | Out-Null
+          try {
+          $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio/Installer/vswhere.exe'
+          $vs = & $vswhere -latest -products '*' -version '[17.0,18.0)' -property installationPath
+          if (!$vs) { throw 'Visual Studio 2022 is required.' }
+          $toolset = Join-Path $vs 'MSBuild/Microsoft/VC/v170/Application Type/Windows Store/10.0/Platforms/x64/PlatformToolsets/v143/Toolset.props'
+          $sdkBin = Join-Path ${env:ProgramFiles(x86)} 'Windows Kits/10/bin/10.0.22621.0/x64'
+          $missingSdkTools = @('makeappx.exe', 'fxc.exe', 'signtool.exe') | Where-Object { !(Test-Path (Join-Path $sdkBin $_)) }
+          if (!(Test-Path $toolset) -or $missingSdkTools) {
+            $installer = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio/Installer/vs_installer.exe'
+            $arguments = @('modify', '--installPath', "`"$vs`"", '--quiet', '--norestart',
+              '--add', 'Microsoft.VisualStudio.ComponentGroup.UWP.VC',
+              '--add', 'Microsoft.VisualStudio.ComponentGroup.UWP.Support',
+              '--add', 'Microsoft.VisualStudio.Component.Windows11SDK.22621')
+            $process = Start-Process -FilePath $installer -ArgumentList $arguments -Wait -PassThru
+            if ($process.ExitCode -notin @(0, 3010)) { throw "VS Installer failed: $($process.ExitCode)" }
+          }
+          if (!(Test-Path $toolset)) { throw 'UWP C++ v143 toolset is still missing after installation.' }
+          foreach ($tool in @('makeappx.exe', 'fxc.exe', 'signtool.exe')) {
+            if (!(Test-Path (Join-Path $sdkBin $tool))) { throw "SDK 22621 tool is missing: $tool" }
+          }
+          } finally { Stop-Transcript | Out-Null }
+      - name: Build and validate interpreter bootstrap MSIX
+        id: build
+        shell: pwsh
+        run: |
+          $package = ./ports/uwp/scripts/Build-Uwp.ps1 -Configuration Release -Jobs 2
+          "package=$($package.PackagePath)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+      - name: Sign development MSIX and verify signature
+        shell: pwsh
+        env:
+          RONDO_MSIX_PATH: ${{ steps.build.outputs.package }}
+        run: |
+          Start-Transcript -Path 'build/uwp/logs/sign-uwp.log' -Force | Out-Null
+          try {
+            # The private key is non-exportable and disappears with this disposable runner.
+            # Only the public CER is uploaded. Temporary verification trust is removed in finally.
+            ./ports/uwp/scripts/Sign-Uwp.ps1 -PackagePath $env:RONDO_MSIX_PATH -VerifyWithTemporaryTrust
+          } finally { Stop-Transcript | Out-Null }
+      - name: Upload signed development MSIX, public certificate and dependencies
+        uses: actions/upload-artifact@v4
+        with:
+          name: RondoRecomp-UWP-x64-interpreter-bootstrap-signed-dev
+          path: build/uwp/MSIX/
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload build and packaging diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: RondoRecomp-UWP-x64-build-logs
+          path: build/uwp/logs/
+          if-no-files-found: warn
+          retention-days: 7

@@ -40,6 +40,12 @@ if(NOT WIN32)
   target_link_libraries(pce PUBLIC m)   # pow, fmod (Windows has them in its C library)
 endif()
 
+# The Xbox frontend uses this small SDL-free host layer. Building it here also
+# lets Linux exercise the same frame/audio/save code used by the UWP package.
+add_library(rondo_uwp_core STATIC ports/uwp/CoreSession.c)
+target_include_directories(rondo_uwp_core PUBLIC ports/uwp)
+target_link_libraries(rondo_uwp_core PUBLIC pce)
+
 add_executable(rondo_headless tools/headless/main.c runtime/recomp/recomp_none.c tools/frontend/game.c tools/frontend/prompt.c
   tools/frontend/moves.c)
 target_link_libraries(rondo_headless PRIVATE pce)
@@ -56,7 +62,11 @@ if(RONDO_GEN_DIR AND EXISTS "${RONDO_GEN_DIR}/table.c")
   file(GLOB RONDO_GEN_SOURCES "${RONDO_GEN_DIR}/*.c")
   add_library(rondogen STATIC ${RONDO_GEN_SOURCES})
   target_include_directories(rondogen PUBLIC runtime "${RONDO_GEN_DIR}")
-  target_compile_options(rondogen PRIVATE -O1 -w)
+  if(MSVC)
+    target_compile_options(rondogen PRIVATE /O1 /w)
+  else()
+    target_compile_options(rondogen PRIVATE -O1 -w)
+  endif()
   add_executable(rondo_headless_rc tools/headless/main.c tools/frontend/game.c tools/frontend/prompt.c tools/frontend/moves.c)
   target_link_libraries(rondo_headless_rc PRIVATE pce rondogen)
 endif()
@@ -176,6 +186,11 @@ add_executable(cheat_test tests/cheat_test.c tools/frontend/game.c)
 target_include_directories(cheat_test PRIVATE tools/frontend)
 target_link_libraries(cheat_test PRIVATE pce)
 add_test(NAME cheats COMMAND cheat_test)
+
+# Self-authored synthetic disc: no commercial game assets are required.
+add_executable(uwp_core_test tests/uwp_core_test.c runtime/recomp/recomp_none.c)
+target_link_libraries(uwp_core_test PRIVATE rondo_uwp_core)
+add_test(NAME uwp_core COMMAND uwp_core_test)
 
 # needs the disc as a .chd and as a cue sheet: build/chd_test <disc.chd> <disc.cue>
 add_executable(chd_test tests/chd_test.c)

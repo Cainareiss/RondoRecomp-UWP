@@ -17,6 +17,8 @@ icon.png
 
 # Build output
 build/
+.vs/
+*.vcxproj.user
 __pycache__/
 *.pyc
 

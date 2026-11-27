@@ -6,6 +6,11 @@ Static recompilation of *Castlevania: Rondo of Blood* (PC Engine Super CD-ROM²)
 
 Currently Windows, Linux x86 (Steam Deck).
 
+An experimental **Xbox Series S|X UWP x64** frontend is being developed in
+[`ports/uwp`](ports/uwp). See the [Xbox build and status notes](docs/uwp-xbox.md)
+for the native-code generation workflow, Dev Mode constraints, and validation
+still required on Windows and the console.
+
 > If you want support for a different platform and want to contribute, please feel free to put in a pull request to add that support in.
 
 ## Issues

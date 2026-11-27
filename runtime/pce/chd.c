@@ -135,6 +135,19 @@ static int32_t bits_signed(Bits *b, int k)   /* k: 1 to 32 */
     return k < 32 ? (int32_t)(v << (32 - k)) >> (32 - k) : (int32_t)v;
 }
 
+/* MSVC's C compiler has no __builtin_clzll. The input is nonzero; keep the
+ * fallback in C so the same decoder builds for the UWP AppContainer. */
+static int leading_zeros64(uint64_t value)
+{
+#if defined(__GNUC__) || defined(__clang__)
+    return __builtin_clzll(value);
+#else
+    int count = 0;
+    for (uint64_t bit = UINT64_C(1) << 63; !(value & bit); bit >>= 1) count++;
+    return count;
+#endif
+}
+
 /* zeros, then a one: how many zeros */
 static uint32_t bits_unary(Bits *b)
 {
@@ -142,7 +155,7 @@ static uint32_t bits_unary(Bits *b)
     for (;;) {
         if (!b->n) bits_fill(b);
         if (b->acc) {
-            int z = __builtin_clzll(b->acc);
+            int z = leading_zeros64(b->acc);
             b->acc <<= z;
             b->acc <<= 1;
             b->n -= z + 1;

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+         xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+         IgnorableNamespaces="uap">
+  <Identity Name="RondoRecomp.UWP.Dev" Publisher="CN=RondoRecomp.UWP.Dev"
+            Version="0.2.0.0" ProcessorArchitecture="x64" />
+  <Properties>
+    <DisplayName>Castlevania: Rondo Recomp</DisplayName>
+    <PublisherDisplayName>Rondo Recomp Xbox UWP</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+    <Description>Port experimental para Xbox Dev Mode.</Description>
+  </Properties>
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.19041.0" MaxVersionTested="10.0.22621.0" />
+  </Dependencies>
+  <Resources><Resource Language="pt-BR" /></Resources>
+  <Applications>
+    <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="RondoRecomp.App">
+      <uap:VisualElements DisplayName="Castlevania: Rondo Recomp" Description="Port experimental para Xbox Dev Mode."
+          BackgroundColor="#24080D" Square150x150Logo="Assets\Square150x150Logo.png"
+          Square44x44Logo="Assets\Square44x44Logo.png">
+        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />
+        <uap:SplashScreen Image="Assets\SplashScreen.png" BackgroundColor="#24080D" />
+      </uap:VisualElements>
+    </Application>
+  </Applications>
+</Package>

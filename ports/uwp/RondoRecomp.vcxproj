@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64"><Configuration>Debug</Configuration><Platform>x64</Platform></ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64"><Configuration>Release</Configuration><Platform>x64</Platform></ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{A8CD8E50-0953-4970-881F-6643B7CDE952}</ProjectGuid>
+    <RootNamespace>RondoRecomp</RootNamespace>
+    <ProjectName>RondoRecomp</ProjectName>
+    <DefaultLanguage>pt-BR</DefaultLanguage>
+    <Keyword>WindowsStore</Keyword>
+    <ApplicationType>Windows Store</ApplicationType>
+    <ApplicationTypeRevision>10.0</ApplicationTypeRevision>
+    <WindowsTargetPlatformVersion>10.0.22621.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformMinVersion>10.0.19041.0</WindowsTargetPlatformMinVersion>
+    <AppContainerApplication>true</AppContainerApplication>
+    <MinimumVisualStudioVersion>17.0</MinimumVisualStudioVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <UseDebugLibraries Condition="'$(Configuration)'=='Debug'">true</UseDebugLibraries>
+    <UseDebugLibraries Condition="'$(Configuration)'!='Debug'">false</UseDebugLibraries>
+    <WholeProgramOptimization>false</WholeProgramOptimization>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <PropertyGroup>
+    <RondoRoot>$(MSBuildProjectDirectory)\..\..\</RondoRoot>
+    <OutDir>$(RondoRoot)build\uwp\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(RondoRoot)build\uwp\obj\$(Platform)\$(Configuration)\</IntDir>
+    <TargetName>RondoRecomp</TargetName>
+    <AppxPackage>true</AppxPackage>
+    <GenerateAppxPackageOnBuild>true</GenerateAppxPackageOnBuild>
+    <AppxBundle>Never</AppxBundle>
+    <AppxBundlePlatforms>x64</AppxBundlePlatforms>
+    <AppxPackageDir>$(RondoRoot)build\uwp\AppPackages\</AppxPackageDir>
+    <AppxPackageSigningEnabled>false</AppxPackageSigningEnabled>
+    <UapAppxPackageBuildMode>SideloadOnly</UapAppxPackageBuildMode>
+    <GenerateManifest>false</GenerateManifest>
+    <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <CompileAsWinRT>false</CompileAsWinRT>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard_C>stdc11</LanguageStandard_C>
+      <ConformanceMode>true</ConformanceMode>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>$(RondoRoot)runtime;$(RondoRoot)third_party\lzma;$(RondoGeneratedDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WINAPI_FAMILY=WINAPI_FAMILY_APP;UNICODE;_UNICODE;NOMINMAX;WIN32_LEAN_AND_MEAN;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalOptions>/utf-8 /bigobj /Zc:__cplusplus /FS %(AdditionalOptions)</AdditionalOptions>
+      <Optimization Condition="'$(Configuration)'=='Debug'">Disabled</Optimization>
+      <Optimization Condition="'$(Configuration)'!='Debug'">MaxSpeed</Optimization>
+      <RuntimeLibrary Condition="'$(Configuration)'=='Debug'">MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeLibrary Condition="'$(Configuration)'!='Debug'">MultiThreadedDLL</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>d3d11.lib;dxgi.lib;d2d1.lib;dwrite.lib;xaudio2.lib;windowsapp.lib;runtimeobject.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="App.cpp"><AdditionalOptions>/await:strict %(AdditionalOptions)</AdditionalOptions></ClCompile>
+    <ClCompile Include="AV.cpp"><AdditionalOptions>/await:strict %(AdditionalOptions)</AdditionalOptions></ClCompile>
+    <ClCompile Include="CoreSession.c" />
+    <ClCompile Include="..\..\runtime\cpu\huc6280.c" />
+    <ClCompile Include="..\..\runtime\cpu\huc6280_info.c" />
+    <ClCompile Include="..\..\runtime\pce\pce.c" />
+    <ClCompile Include="..\..\runtime\pce\video.c" />
+    <ClCompile Include="..\..\runtime\pce\disc.c" />
+    <ClCompile Include="..\..\runtime\pce\chd.c" />
+    <ClCompile Include="..\..\runtime\pce\discid.c" />
+    <ClCompile Include="..\..\runtime\pce\bios_hle.c" />
+    <ClCompile Include="..\..\runtime\pce\kanji_font.c" />
+    <ClCompile Include="..\..\runtime\pce\bram.c" />
+    <ClCompile Include="..\..\runtime\pce\sound.c" />
+    <ClCompile Include="..\..\runtime\pce\state.c" />
+    <ClCompile Include="..\..\runtime\recomp\dispatch.c" />
+    <ClCompile Include="..\..\runtime\util\png.c" />
+    <ClCompile Include="..\..\third_party\lzma\LzmaDec.c" />
+    <!-- Never link the interpreter stub together with a generated table. -->
+    <ClCompile Include="..\..\runtime\recomp\recomp_none.c" Condition="'$(RondoGeneratedDir)'==''" />
+    <ClCompile Include="$(RondoGeneratedDir)\*.c" Condition="'$(RondoGeneratedDir)'!=''">
+      <!-- Generated chunks favor smaller code and bounded compiler memory. -->
+      <Optimization>MinSpace</Optimization>
+    </ClCompile>
+    <ClInclude Include="*.h" />
+    <None Include="Frame.hlsl" />
+    <AppxManifest Include="Package.appxmanifest" />
+    <Content Include="Assets\*.png"><DeploymentContent>true</DeploymentContent></Content>
+    <Content Include="$(IntDir)Shaders\FrameVS.cso">
+      <Link>Shaders\FrameVS.cso</Link><TargetPath>Shaders\FrameVS.cso</TargetPath><DeploymentContent>true</DeploymentContent>
+    </Content>
+    <Content Include="$(IntDir)Shaders\FramePS.cso">
+      <Link>Shaders\FramePS.cso</Link><TargetPath>Shaders\FramePS.cso</TargetPath><DeploymentContent>true</DeploymentContent>
+    </Content>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <Target Name="CheckRondoConfiguration" BeforeTargets="PrepareForBuild">
+    <Error Condition="'$(Platform)'!='x64'" Text="Xbox Dev Mode requires x64. Use /p:Platform=x64." />
+    <Error Condition="'$(RondoGeneratedDir)'!='' and !Exists('$(RondoGeneratedDir)\table.c')" Text="RondoGeneratedDir must contain table.c and the C files produced by rondo_gen." />
+  </Target>
+  <Target Name="CompileRondoShaders" BeforeTargets="ClCompile" Inputs="$(MSBuildProjectDirectory)\Frame.hlsl" Outputs="$(IntDir)Shaders\FrameVS.cso;$(IntDir)Shaders\FramePS.cso">
+    <MakeDir Directories="$(IntDir)Shaders" />
+    <Exec Command="&quot;$(WindowsSdkDir)bin\$(WindowsTargetPlatformVersion)\x64\fxc.exe&quot; /nologo /O3 /T vs_4_0 /E VSMain /Fo &quot;$(IntDir)Shaders\FrameVS.cso&quot; &quot;$(MSBuildProjectDirectory)\Frame.hlsl&quot;" />
+    <Exec Command="&quot;$(WindowsSdkDir)bin\$(WindowsTargetPlatformVersion)\x64\fxc.exe&quot; /nologo /O3 /T ps_4_0 /E PSMain /Fo &quot;$(IntDir)Shaders\FramePS.cso&quot; &quot;$(MSBuildProjectDirectory)\Frame.hlsl&quot;" />
+  </Target>
+</Project>
